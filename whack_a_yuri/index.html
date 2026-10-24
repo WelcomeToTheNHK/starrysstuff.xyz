@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Whack-a-Yuri</title>
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:"Trebuchet MS",Verdana,sans-serif;user-select:none;-webkit-user-select:none}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;overflow:hidden;transform-origin:center;background:#fff;touch-action:none}
+img{-webkit-user-drag:none;user-select:none;pointer-events:none}
+.bg{position:absolute;inset:0;width:100%;height:100%}
+.screen{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .5s}
+.screen.on{opacity:1;pointer-events:auto}
+#home{background:#ffd9ee radial-gradient(circle,#ffc0e2 7px,transparent 8px) 0 0/52px 52px;text-align:center;z-index:30}
+h1{margin:70px 0 6px;font-size:88px;color:#fff;letter-spacing:2px;-webkit-text-stroke:10px #ff7cbf;paint-order:stroke fill}
+.sub{color:#b0306f;font-size:24px;margin:0 0 44px;font-weight:bold}
+.lbl{color:#b0306f;font-weight:bold;font-size:22px;margin-bottom:14px}
+#diffs{display:flex;justify-content:center;gap:14px}
+.d{width:190px;padding:14px 6px;background:#fff;border:3px solid #ffa6d5;border-radius:12px;color:#b0306f;cursor:pointer;font:inherit;transition:.15s}
+.d b{display:block;font-size:24px;margin-bottom:2px}.d small{font-size:15px;color:#c0679a;line-height:1.35}
+.d:hover{background:#ffeaf5}.d.sel{background:#ff7cbf;border-color:#ff5aa9;color:#fff}.d.sel small{color:#fff}
+.btn{margin-top:40px;padding:14px 56px;font-size:30px;font-weight:bold;color:#fff;background:#ff7cbf;border:4px solid #fff;border-radius:40px;cursor:pointer;box-shadow:0 0 0 3px #ff7cbf;font-family:inherit}
+.btn:hover{background:#ff5aa9}
+.fan{position:absolute;bottom:14px;width:100%;color:#c0679a;font-size:14px}
+/* game */
+#game{cursor:none;background:linear-gradient(#aad2f5,#e1f0fa)}
+.hole{position:absolute;border-radius:50%;background:radial-gradient(#1c0f10 55%,#4b2a22 80%,#6b4034);box-shadow:0 3px 0 rgba(255,255,255,.18)}
+.slot{position:absolute;overflow:hidden;pointer-events:none}
+.slot img{position:absolute;left:0;bottom:0;width:100%;transform:translateY(105%);transform-origin:bottom;transition:transform .14s ease-out;pointer-events:none}
+.pill{position:absolute;top:18px;padding:6px 24px;background:rgba(255,238,248,.92);border:3px solid #ff9ad0;border-radius:14px;color:#b0306f;font-size:26px;font-weight:bold}
+#mute{position:absolute;right:24px;top:18px;width:52px;height:52px;border-radius:50%;border:3px solid #fff;background:#ff7cbf;color:#fff;font-size:24px;cursor:pointer;z-index:20}
+#hammer{position:absolute;left:0;top:0;width:0;height:0;z-index:40;pointer-events:none;display:none}
+#swing{position:absolute;left:0;top:0;width:0;height:0;transform-origin:270px 228px}
+#swing img{position:absolute;left:-8px;top:-76px;width:300px;max-width:none}
+#swing.go{animation:sw .24s ease-out}
+@keyframes sw{0%{transform:rotate(0)}35%{transform:rotate(30deg)}65%{transform:rotate(-14deg)}100%{transform:rotate(0)}}
+/* result */
+#result{z-index:25;background:rgba(40,10,30,.35)}
+#rs{position:absolute;left:0;bottom:0;width:100%;height:100%;object-fit:contain;object-position:bottom}
+#tag{position:absolute;left:150px;bottom:200px;color:#fff;font-weight:bold;font-size:22px;padding:4px 26px;border-radius:10px 10px 0 0}
+#box{position:absolute;left:120px;bottom:16px;width:1040px;height:195px;box-sizing:border-box;background:url(assets/textbox.png) center/100% 100% no-repeat;display:flex;align-items:center;padding:0 50px 6px;gap:30px;color:#fff;-webkit-text-stroke:5px #c0467f;paint-order:stroke fill}
+#pct{font-size:80px;font-weight:bold;min-width:170px;text-align:center;-webkit-text-stroke:9px #c0467f}
+#msg{flex:1;font-size:26px;line-height:1.3}#msg small{display:block;font-size:18px;margin-top:6px;-webkit-text-stroke:4px #c0467f}
+#btns{display:flex;flex-direction:column;gap:10px}
+#box .btn{margin:0;font-size:22px;padding:7px 30px;color:#d4468f;background:#fff;border:3px solid #c0467f;box-shadow:none;-webkit-text-stroke:0}#box .btn:hover{background:#ffe3f1}
+</style></head><body>
+<audio id="bgm" src="assets/your_reality.mp3" loop preload="auto"></audio>
+<div id="stage">
+ <div id="game" class="screen">
+  <img class="bg" src="assets/classroom_empty.png" alt="">
+  <div id="field"></div>
+  <div class="pill" style="left:24px">Score <span id="sc">0</span></div>
+  <div class="pill" style="left:220px">Time <span id="tm">30</span></div>
+  <button id="mute" title="Mute music">&#9835;</button>
+ </div>
+ <div id="result" class="screen">
+  <img id="rs" alt=""><div id="tag"></div>
+  <div id="box"><div id="pct"></div><div id="msg"></div><div id="btns"><button class="btn" id="again">Again</button><button class="btn" id="menu">Menu</button></div></div>
+ </div>
+ <div id="home" class="screen on">
+  <h1>Whack-a-Yuri</h1><p class="sub">Whack Yuri as she pops up. Be careful who you hit.</p>
+  <div class="lbl">Difficulty</div><div id="diffs"></div>
+  <button class="btn" id="play">Play</button>
+  <div class="fan">Fan-made game. Not affiliated with Team Salvato.</div>
+ </div>
+ <div id="hammer"><div id="swing"><img src="assets/hammer.png" alt=""></div></div>
+</div>
+<script>
+addEventListener('dragstart',e=>e.preventDefault());
+const $=id=>document.getElementById(id),R=()=>Math.random();
+// name, Yuri stays up (ms), spawn gap (ms), max Yuri at once, Natsuki chance, speed label, Natsuki label
+const CFG=[["Easy",1700,1100,1,.10,"Slow","rare"],["Normal",1300,850,2,.16,"Medium","sometimes"],["Hard",1000,650,2,.22,"Fast","often"],["Very Hard",780,500,3,.28,"Very fast","often"],["Hardest",600,380,4,.34,"Insane","constantly"]];
+const TIME=30000, ROWS=[[505,.8],[598,.9],[692,1]], COLS=[300,640,980];
+const MAD='https://static.wikia.nocookie.net/doki-doki-literature-club/images/8/8b/Turnedaway4.png/revision/latest?cb=20171209181300',NAT_OK='assets/natsuki_full.png';
+let di=1,cfg,H=[],score=0,playing=false,t0=0,tick,spawnT,scale=1;
+const bgm=$('bgm'),bonkA=new Audio('assets/bonk.mp3');bgm.volume=.4;
+
+CFG.forEach((d,i)=>{const b=document.createElement('button');b.className='d';b.innerHTML=`<b>${d[0]}</b><small>${d[5]} speed<br>${d[3]} Yuri at once<br>Natsuki: ${d[6]}</small>`;b.onclick=()=>{di=i;sync()};$('diffs').appendChild(b)});
+const sync=()=>[...$('diffs').children].forEach((b,i)=>b.classList.toggle('sel',i==di));sync();
+function fit(){scale=Math.min(innerWidth/1280,innerHeight/720);$('stage').style.transform=`translate(-50%,-50%) scale(${scale})`}
+addEventListener('resize',fit);fit();
+
+// holes + slots
+ROWS.forEach(([y,s],r)=>COLS.forEach(x=>{
+ const hole=document.createElement('div');hole.className='hole';Object.assign(hole.style,{left:x-100*s+'px',top:y-24*s+'px',width:200*s+'px',height:48*s+'px',zIndex:r*10});
+ const slot=document.createElement('div');slot.className='slot';Object.assign(slot.style,{left:x-100*s+'px',top:y-200*s+'px',width:200*s+'px',height:200*s+'px',zIndex:r*10+1});
+ const img=document.createElement('img');slot.appendChild(img);$('field').append(hole,slot);
+ const h={slot,img,s:0,t:'y',to:0};slot.addEventListener('pointerdown',()=>whack(h));H.push(h)}));
+
+function pop(h,t){h.s=1;h.t=t;h.img.src=`assets/${t=='y'?'yuri':'natsuki'}_head.png`;h.slot.style.pointerEvents='auto';
+ void h.img.offsetWidth;h.img.style.transform='translateY(0)';h.to=setTimeout(()=>down(h),cfg[1]*(.8+R()*.4))}
+function down(h){clearTimeout(h.to);h.s=2;h.slot.style.pointerEvents='none';h.img.style.transform='translateY(105%)';setTimeout(()=>{if(h.s==2)h.s=0},220)}
+function spawn(){if(!playing)return;
+ const free=H.filter(h=>h.s==0),yUp=H.filter(h=>h.s==1&&h.t=='y').length,nUp=H.some(h=>h.s==1&&h.t=='n');
+ if(free.length&&yUp<cfg[3])pop(free[R()*free.length|0],(!nUp&&performance.now()-t0>2500&&R()<cfg[4])?'n':'y');
+ spawnT=setTimeout(spawn,cfg[2]*(.75+R()*.5))}
+function bonk(){const a=bonkA.cloneNode();a.volume=.8;a.play().catch(()=>{})}
+function whack(h){
+ if(!playing||h.s!=1)return;clearTimeout(h.to);bonk();
+ if(h.t=='y'){score++;$('sc').textContent=score;h.s=3;h.img.style.transform='translateY(55%) scaleY(.6)';setTimeout(()=>down(h),220)}
+ else{h.img.style.transform='translateY(55%) scaleY(.6)';end('lose')}}
+
+function start(){cfg=CFG[di];score=0;$('sc').textContent=0;$('tm').textContent=TIME/1000;H.forEach(h=>{h.s=0;h.img.style.transform='translateY(105%)'});
+ const pre=new Image();pre.referrerPolicy='no-referrer';pre.src=MAD;
+ playing=true;t0=performance.now();show('game');$('hammer').style.display='block';music(true);
+ tick=setInterval(()=>{const l=Math.max(0,TIME-(performance.now()-t0));$('tm').textContent=Math.ceil(l/1000);if(l<=0)end('time')},100);
+ spawnT=setTimeout(spawn,700)}
+function end(kind){
+ if(!playing)return;playing=false;clearInterval(tick);clearTimeout(spawnT);
+ H.forEach(h=>{if(h.s==1)down(h)});music(false);
+ let best=0;try{const k='wy_best_'+di;best=Math.max(+localStorage.getItem(k)||0,0);if(kind=='time'&&score>best){best=score;localStorage.setItem(k,best)}}catch(e){best=Math.max(best,score)}
+ const lose=kind=='lose';
+ setTimeout(()=>{$('hammer').style.display='none';
+  const rs=$('rs');rs.onerror=()=>{rs.onerror=null;rs.src=NAT_OK};rs.referrerPolicy='no-referrer';rs.src=lose?MAD:'assets/yuri_full.png';
+  const tg=$('tag');tg.textContent=lose?'Natsuki':'Yuri';tg.style.background=lose?'#ff7cbf':'#b58be8';
+  $('pct').textContent=score;
+  $('msg').innerHTML=(lose?"Ow! Hey, that was ME! Watch where you swing that thing!":"Time's up! You were really quick just now.")+`<small>${cfg[0]} - ${lose?'You hit Natsuki! ':''}Best: ${best}</small>`;
+  show('result')},lose?700:500)}
+function show(id){$('game').classList.toggle('on',id!='home');$('result').classList.toggle('on',id=='result');$('home').classList.toggle('on',id=='home')}
+$('play').onclick=start;$('again').onclick=start;$('menu').onclick=()=>show('home');
+
+// hammer follows the pointer and swings on every click
+const st=$('stage'),hm=$('hammer'),sw=$('swing');
+function mv(e){const r=st.getBoundingClientRect();hm.style.transform=`translate(${(e.clientX-r.left)/scale}px,${(e.clientY-r.top)/scale}px)`}
+st.addEventListener('pointermove',mv);
+st.addEventListener('pointerdown',e=>{mv(e);if(!playing)return;sw.classList.remove('go');void sw.offsetWidth;sw.classList.add('go')});
+
+// music
+let fade;
+$('mute').onclick=()=>{bgm.muted=!bgm.muted;$('mute').style.opacity=bgm.muted?.55:1;$('mute').innerHTML=bgm.muted?'&times;':'&#9835;'};
+function music(on){clearInterval(fade);if(on){bgm.volume=.4;bgm.currentTime=0;bgm.play().catch(()=>{})}else fade=setInterval(()=>{if(bgm.volume>.05)bgm.volume=Math.max(0,bgm.volume-.05);else{bgm.pause();clearInterval(fade)}},100)}
+</script></body></html>
