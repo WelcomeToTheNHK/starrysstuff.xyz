@@ -10,18 +10,17 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    touch-action: none; /* stop scroll/zoom while playing */
+    touch-action: none;
   }
   #Canvas {
     position: relative;
     width: 100%;
-    height: 100dvh; /* better than 100vh on mobile browsers */
+    height: 100dvh;
     background-image: url('./assets/club.png');
     background-size: cover;
     background-position: center;
   }
   #Birdy {
-    /* was 4.5% of width → tiny on phones */
     width: clamp(32px, 7vw, 56px);
     height: auto;
     position: absolute;
@@ -35,7 +34,6 @@
     position: absolute;
     top: 0;
     left: 100%;
-    /* was 9% → too thin on mobile */
     width: clamp(48px, 11vw, 80px);
     overflow: hidden;
     z-index: 5;
@@ -156,6 +154,20 @@ $(function(){
     'you fell...','oh no...','how poetic.','I-it\'s okay...','lol u bad','u helping monika or sum?'
   ];
   function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+
+  // Continuous difficulty from current score (soft floors so it stays playable)
+  function getDifficulty(){
+    const s = currentScore;
+    return {
+      // starts ~3500ms, drops ~20ms per point, floor 1200ms
+      pipeDuration: Math.max(1200, Math.round(3500 - s * 20)),
+      // starts 28%, shrinks 0.13% per point, floor 12%
+      gapPct: Math.max(12, 28 - s * 0.13),
+      // starts every 55 ticks, -0.25 per point, floor every 25 ticks
+      spawnEvery: Math.max(25, Math.round(55 - s * 0.25)),
+    };
+  }
+
   const canvasObj = $('#Canvas');
   const birdyEl   = $('#Birdy');
   let gameLoopID = 0;
@@ -164,6 +176,7 @@ $(function(){
   let started    = false;
   let currentScore = 0, bestScore = 0;
   let gameLoopCounter = 0;
+
   const Birdy = new (function(){
     const sel       = birdyEl;
     let jumping     = false;
@@ -199,26 +212,31 @@ $(function(){
     };
     this.el = sel;
   });
+
   function addPipe(){
-    const gapPct  = 28;
+    const d = getDifficulty();
+    const gapPct  = d.gapPct;
     const minH    = 6;
     const maxTopH = 100 - gapPct - 2*minH;
     const topH    = Math.random()*maxTopH + minH;
     const botTop  = topH + gapPct;
     const botH    = 100 - botTop;
+    const duration = d.pipeDuration;
+
     $('<div>').addClass('Pipe flipped')
       .css('height', topH+'%')
       .data('scored', false)
       .append($('<img>').attr('src', PIPE_IMG))
       .appendTo(canvasObj)
-      .animate({left:'-25%'}, 3500, 'linear', function(){ $(this).remove(); });
+      .animate({left:'-25%'}, duration, 'linear', function(){ $(this).remove(); });
     $('<div>').addClass('Pipe BottomPipe')
       .css({height: botH+'%', top: botTop+'%'})
       .data('scored', false)
       .append($('<img>').attr('src', PIPE_IMG))
       .appendTo(canvasObj)
-      .animate({left:'-25%'}, 3500, 'linear', function(){ $(this).remove(); });
+      .animate({left:'-25%'}, duration, 'linear', function(){ $(this).remove(); });
   }
+
   function isIntersecting(a, b){
     const ar=a[0].getBoundingClientRect(), br=b[0].getBoundingClientRect();
     const margin = ar.width*0.28;
@@ -253,7 +271,8 @@ $(function(){
     if(gameLoopCounter%2===0){ incrementScore(); checkCollisions(); }
     isInBound();
     Birdy.fall();
-    if(gameLoopCounter%55===0) addPipe();
+    const d = getDifficulty();
+    if(gameLoopCounter % d.spawnEvery === 0) addPipe();
   }
   function startLoop(){
     if(lost) return;
