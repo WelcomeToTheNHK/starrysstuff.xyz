@@ -1,6 +1,29 @@
-<h1>in construction</h1>
-<p>come back #never</p>
-<p>pet yuri: https://starrysstuff.xyz/yuri/</p>
-<p>flappy bird but yuri: https://starrysstuff.xyz/yuri/bird/</p>
-<p>Poem Panic (try to get words yuri likes): https://starrysstuff.xyz/poem/</p>
-<p>Whack-A-Mole: https://starrysstuff.xyz/whack_a_yuri</p>
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Starry's Stuff</title>
+<style>
+html,body{margin:0;min-height:100%;font-family:"Trebuchet MS",Verdana,sans-serif}
+body{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;padding:40px 16px 56px;
+ background:#ffd9ee radial-gradient(circle,#ffc0e2 7px,transparent 8px) 0 0/52px 52px}
+h1{margin:0 0 8px;font-size:clamp(44px,9vw,88px);color:#fff;letter-spacing:2px;-webkit-text-stroke:10px #ff7cbf;paint-order:stroke fill}
+.sub{color:#b0306f;font-size:clamp(17px,2.4vw,24px);margin:0 0 40px;font-weight:bold}
+#games{display:grid;grid-template-columns:repeat(2,minmax(0,260px));gap:16px;justify-content:center}
+.g{display:block;padding:18px 12px;background:#fff;border:3px solid #ffa6d5;border-radius:12px;color:#b0306f;text-decoration:none;transition:.15s}
+.g b{display:block;font-size:24px;margin-bottom:4px}
+.g small{font-size:15px;color:#c0679a;line-height:1.35}
+.g:hover,.g:focus-visible{background:#ff7cbf;border-color:#ff5aa9;color:#fff;transform:translateY(-3px);outline:none}
+.g:hover small,.g:focus-visible small{color:#fff}
+.fan{position:absolute;bottom:14px;left:0;width:100%;color:#c0679a;font-size:14px}
+@media(max-width:600px){#games{grid-template-columns:minmax(0,260px)}}
+</style></head><body>
+<h1>Starry's Stuff</h1>
+<p class="sub">Pick a game to play.</p>
+<div id="games">
+ <a class="g" href="https://starrysstuff.xyz/yuri/"><b>Pet Yuri</b><small>Give Yuri some attention</small></a>
+ <a class="g" href="https://starrysstuff.xyz/yuri/bird/"><b>Flappy Yuri</b><small>Flappy Bird, but Yuri</small></a>
+ <a class="g" href="https://starrysstuff.xyz/poem/"><b>Poem Panic</b><small>Try to get words Yuri likes</small></a>
+ <a class="g" href="https://starrysstuff.xyz/whack_a_yuri"><b>Whack-A-Mole</b><small>Whack Yuri, not Natsuki</small></a>
+</div>
+<div class="fan">Fan-made games. Not affiliated with Team Salvato.</div>
+</body></html>
