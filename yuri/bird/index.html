@@ -86,14 +86,12 @@
     <div class="nums">score: <b id="FinalScore">0</b> &nbsp;•&nbsp; best: <b id="BestScore">0</b></div>
     <button id="ResetButton">try again</button>
   </div>
-  <img id="Birdy" src="./assets/yuri_char.png" alt="Yuri">
+  <img id="Birdy" src="./assets/character.png" alt="Yuri">
 </div>
-
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
 $(function(){
   const PIPE_IMG = './assets/yuri_pipe.png';
-
   const QUOTES = [
     "lol imagine dying",
     "i- its not like i like you or anything!",
@@ -108,17 +106,14 @@ $(function(){
     'you fell...','oh no...','how poetic.','I-it\'s okay...','lol u bad','u helping monika or sum?'
   ];
   function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
-
   const canvasObj = $('#Canvas');
   const birdyEl   = $('#Birdy');
-
   let gameLoopID = 0;
   let paused     = true;
   let lost       = false;
   let started    = false;
   let currentScore = 0, bestScore = 0;
   let gameLoopCounter = 0;
-
   const Birdy = new (function(){
     const sel       = birdyEl;
     let jumping     = false;
@@ -126,12 +121,10 @@ $(function(){
     const gravAccel = 0.25;
     const termVel   = 4;
     let angle       = 0;
-
     this.reset = function(){
       jumping=false; gravVeloc=0; angle=0;
       sel.stop(true).css({top:'50%', transform:'rotate(-90deg)'});
     };
-
     this.fall = function(){
       if(!jumping){
         sel.stop(true).animate({top:'+='+gravVeloc+'%'}, 30, 'linear');
@@ -142,7 +135,6 @@ $(function(){
         gravVeloc = 0;
       }
     };
-
     this.jump = function(){
       if(paused) return;
       jumping = true;
@@ -152,14 +144,11 @@ $(function(){
           Birdy.fall();
         });
     };
-
     this.dropOut = function(){
       sel.stop(true).animate({top:'92%'}, 1200, 'linear');
     };
-
     this.el = sel;
   });
-
   function addPipe(){
     const gapPct  = 28;
     const minH    = 6;
@@ -167,14 +156,12 @@ $(function(){
     const topH    = Math.random()*maxTopH + minH;
     const botTop  = topH + gapPct;
     const botH    = 100 - botTop;
-
     $('<div>').addClass('Pipe flipped')
       .css('height', topH+'%')
       .data('scored', false)
       .append($('<img>').attr('src', PIPE_IMG))
       .appendTo(canvasObj)
       .animate({left:'-25%'}, 3500, 'linear', function(){ $(this).remove(); });
-
     $('<div>').addClass('Pipe BottomPipe')
       .css({height: botH+'%', top: botTop+'%'})
       .data('scored', false)
@@ -182,14 +169,12 @@ $(function(){
       .appendTo(canvasObj)
       .animate({left:'-25%'}, 3500, 'linear', function(){ $(this).remove(); });
   }
-
   function isIntersecting(a, b){
     const ar=a[0].getBoundingClientRect(), br=b[0].getBoundingClientRect();
     const margin = ar.width*0.28;
     const al=ar.left+margin, at=ar.top+margin, aright=ar.right-margin, ab=ar.bottom-margin;
     return !(ab<br.top || at>br.bottom || al>br.right || aright<br.left);
   }
-
   function checkCollisions(){
     let hit=false;
     $('.Pipe').each(function(){
@@ -197,13 +182,11 @@ $(function(){
     });
     if(hit) endGame();
   }
-
   function isInBound(){
     const br=Birdy.el[0].getBoundingClientRect();
     const cr=canvasObj[0].getBoundingClientRect();
     if(br.bottom>cr.bottom || br.top<cr.top) endGame();
   }
-
   function incrementScore(){
     $('.BottomPipe').each(function(){
       const birdRight = Birdy.el.offset().left + Birdy.el.width();
@@ -215,7 +198,6 @@ $(function(){
       }
     });
   }
-
   function gameLoop(){
     gameLoopCounter++;
     if(gameLoopCounter%2===0){ incrementScore(); checkCollisions(); }
@@ -223,18 +205,15 @@ $(function(){
     Birdy.fall();
     if(gameLoopCounter%55===0) addPipe();
   }
-
   function startLoop(){
     if(lost) return;
     gameLoopID = setInterval(gameLoop, 30);
     paused=false;
   }
-
   function stopLoop(){
     clearInterval(gameLoopID);
     paused=true;
   }
-
   function endGame(){
     if(lost) return;
     lost=true;
@@ -247,7 +226,6 @@ $(function(){
     $('#DeathQuote').text('"'+pick(QUOTES)+'"');
     setTimeout(()=>{ $('#LostScoreScreen').fadeIn(300); }, 900);
   }
-
   function resetGame(){
     stopLoop();
     lost=false; started=true;
@@ -258,7 +236,6 @@ $(function(){
     $('#CurrentScoreCard').text('0').show();
     startLoop();
   }
-
   canvasObj.on('mousedown touchstart', function(e){
     e.preventDefault();
     if(!started){
@@ -271,7 +248,6 @@ $(function(){
     if(lost) return;
     Birdy.jump();
   });
-
   $(document).on('keydown', function(e){
     if(e.which===32){
       e.preventDefault();
@@ -286,7 +262,6 @@ $(function(){
       Birdy.jump();
     }
   });
-
   $('#ResetButton').on('click', function(e){
     e.stopPropagation();
     resetGame();
