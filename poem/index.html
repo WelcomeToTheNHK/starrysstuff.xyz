@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Poem Words</title>
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:"Trebuchet MS",Verdana,sans-serif}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;overflow:hidden;transform-origin:center;background:#fff}
+#stage img.bg{position:absolute;inset:0;width:100%;height:100%}
+.screen{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .6s}
+.screen.on{opacity:1;pointer-events:auto}
+.hand{font-family:"Patrick Hand","Segoe Print","Comic Sans MS",cursive}
+/* home */
+#home{background:#ffd9ee radial-gradient(circle,#ffc0e2 7px,transparent 8px) 0 0/52px 52px;text-align:center;z-index:5}
+h1{margin:70px 0 6px;font-size:88px;color:#fff;letter-spacing:2px;-webkit-text-stroke:10px #ff7cbf;paint-order:stroke fill}
+.sub{color:#b0306f;font-size:24px;margin:0 0 44px;font-weight:bold}
+.lbl{color:#b0306f;font-weight:bold;font-size:22px;margin-bottom:14px}
+#diffs{display:flex;justify-content:center;gap:14px}
+.d{width:190px;padding:14px 6px;background:#fff;border:3px solid #ffa6d5;border-radius:12px;color:#b0306f;cursor:pointer;font:inherit;transition:.15s}
+.d b{display:block;font-size:24px}.d small{font-size:15px;color:#c0679a}
+.d:hover{background:#ffeaf5}.d.sel{background:#ff7cbf;border-color:#ff5aa9;color:#fff}.d.sel small{color:#fff}
+.btn{margin-top:40px;padding:14px 56px;font-size:30px;font-weight:bold;color:#fff;background:#ff7cbf;border:4px solid #fff;border-radius:40px;cursor:pointer;box-shadow:0 0 0 3px #ff7cbf;font-family:inherit}
+.btn:hover{background:#ff5aa9}.btn:disabled{opacity:.7;cursor:wait}
+.fan{position:absolute;bottom:14px;width:100%;color:#c0679a;font-size:14px}
+/* game */
+#count{position:absolute;right:395px;top:63px;font-size:32px;color:#222;line-height:40px;width:150px;text-align:right}
+#poem{position:absolute;left:30px;top:64px;width:335px;font-size:26px;line-height:42.5px;color:#444}
+.w{position:absolute;height:40px;line-height:40px;font-size:30px;color:#111;background:none;border:0;padding:0 6px;margin-left:-6px;cursor:pointer;border-radius:6px;font-family:"Patrick Hand","Segoe Print","Comic Sans MS",cursive}
+.w:hover{background:rgba(255,150,205,.45)}
+#mute{position:absolute;right:24px;top:24px;width:52px;height:52px;border-radius:50%;border:3px solid #fff;background:#ff7cbf;color:#fff;font-size:24px;cursor:pointer}#mute:hover{background:#ff5aa9}
+#chibi{position:absolute;left:26px;bottom:16px;height:130px;pointer-events:none;z-index:2}
+.hop{animation:hop .85s ease-out}
+@keyframes hop{0%,50%,100%{transform:translateY(0)}25%,75%{transform:translateY(-42px)}}
+/* result */
+#result{z-index:4}
+#yuri{position:absolute;left:0;bottom:0;width:100%;height:100%;object-fit:contain;object-position:bottom;opacity:0;transition:opacity 1s .5s}
+#result.on #yuri{opacity:1}
+#box{position:absolute;left:120px;bottom:16px;width:1040px;height:195px;box-sizing:border-box;background:url(assets/textbox.png) center/100% 100% no-repeat;display:flex;align-items:center;padding:0 50px 6px;gap:30px;color:#fff;-webkit-text-stroke:5px #c0467f;paint-order:stroke fill}
+#tag{position:absolute;left:150px;bottom:200px;background:#b58be8;color:#fff;font-weight:bold;font-size:22px;padding:4px 26px;border-radius:10px 10px 0 0}
+#pct{font-size:76px;font-weight:bold;min-width:210px;text-align:center;-webkit-text-stroke:9px #c0467f}
+#msg{flex:1;font-size:26px;line-height:1.3}#msg small{display:block;font-size:18px;margin-top:6px;-webkit-text-stroke:4px #c0467f}
+#box .btn{margin:0;font-size:24px;padding:10px 34px;color:#d4468f;background:#fff;border:3px solid #c0467f;box-shadow:none;-webkit-text-stroke:0}#box .btn:hover{background:#ffe3f1}
+</style></head><body>
+<audio id="bgm" src="assets/poem_panic.mp3" loop preload="auto"></audio>
+<div id="stage">
+ <img class="bg" id="book" src="assets/poem_book.png" alt="">
+ <div id="game" class="screen">
+  <img id="chibi" src="assets/chibi_yuri.png" alt=""><button id="mute" title="Mute music">&#9835;</button><div id="count" class="hand"></div><div id="poem" class="hand"></div><div id="words"></div>
+ </div>
+ <div id="result" class="screen">
+  <img class="bg" src="assets/classroom.png" alt="">
+  <img id="yuri" alt="Yuri" referrerpolicy="no-referrer">
+  <div id="tag">Yuri</div>
+  <div id="box"><div id="pct"></div><div id="msg"></div><button class="btn" id="again">Restart</button></div>
+ </div>
+ <div id="home" class="screen on">
+  <h1>Poem Words</h1><p class="sub">Pick the words Yuri likes best.</p>
+  <div class="lbl">Difficulty</div><div id="diffs"></div>
+  <button class="btn" id="play">Play</button>
+  <div class="fan">Fan-made game. Not affiliated with Team Salvato.</div>
+ </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const L=s=>s.split(' ');
+const SAY=L("happiness sadness death tragedy alone love adventure sweet excitement fireworks romance tears depression heart marriage passion childhood fun color hope friends family party vacation lazy daydream pain holiday bed feather shame fear warm flower comfort dance sing cry laugh dark sunny raincloud calm silly flying wonderful unrequited rose together promise charm beauty cheer smile broken precious prayer clumsy forgive nature ocean dazzle special music lucky misfortune loud peaceful joy sunset fireflies rainbow hurt play sparkle scars empty amazing grief embrace extraordinary awesome defeat hopeless misery treasure bliss memories");
+const NAT=L("cute fluffy pure candy shopping puppy kitty clouds lipstick parfait strawberry pink chocolate heartbeat kiss melody ribbon jumpy doki-doki kawaii skirt cheeks email sticky bouncy shiny nibble fantasy sugar giggle marshmallow hop skipping peace spinning twirl lollipop poof bubbles whisper summer waterfall swimsuit vanilla headphones games socks hair playground nightgown blanket milk pout anger papa valentine mouse whistle boop bunny anime jump");
+const YUR=L("determination suicide imagination secretive vitality existence effulgent crimson whirlwind afterimage vertigo disoriented essence ambient starscape disarray contamination intellectual analysis entropy vivacious uncanny incongruent wrath heavensent massacre philosophy fickle tenacious aura unstable inferno incapable destiny infallible agonizing variance uncontrollable extreme flee dream disaster vivid vibrant question fester judgment cage explode pleasure lust sensation climax electricity disown despise infinite eternity time universe unending raindrops covet unrestrained landscape portrait journey meager anxiety frightening horror melancholy insight atone breathe captive desire graveyard");
+const OTH=SAY.concat(NAT), YSET=new Set(YUR);
+const B="https://static.wikia.nocookie.net/doki-doki-literature-club/images/";
+const MOODS=[
+ {max:9,name:"Extremely sad",line:"...This wasn't written for me, was it?",url:B+"0/00/YuriDeathAnim.gif/revision/latest?cb=20190319053035"},
+ {max:30,name:"Angry",line:"These aren't the words I would have chosen.",url:B+"3/32/YAngry.png/revision/latest?cb=20171210171048"},
+ {max:50,name:"Indifferent",line:"It's... fine, I suppose.",url:B+"1/16/Yuri_Exhale.webp/revision/latest?cb=20260624061058"},
+ {max:70,name:"Glad",line:"Oh, this is rather nice. Thank you for sharing it.",url:B+"1/13/2l1.png/revision/latest?cb=20171209145125"},
+ {max:99,name:"Happy",line:"This is wonderful! You really understood me.",url:B+"1/19/Yurifull1.png/revision/latest?cb=20171203145750"},
+ {max:100,name:"Very happy",line:"It's perfect... as if it came from my own heart.",url:B+"d/df/YSShy1.png/revision/latest?cb=20171210172449"}];
+// name, words needed, Yuri words per page
+const DIFFS=[["Easy",10,5,.3],["Normal",20,4,.45],["Hard",30,3,.6],["Very Hard",40,2,.75],["Hardest",50,1,.9]];
+// page geometry (1280x720 book image): columns, ruled-line y positions measured from the image
+const COLX=[443,686], ROWY=[192,283,374,466,558];
+let di=1, cfg, used, picked, yScore, busy;
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=(a,n)=>shuf(a).slice(0,n);
+
+DIFFS.forEach((d,i)=>{const b=document.createElement('button');b.className='d';b.innerHTML=`<b>${d[0]}</b><small>${d[1]} words<br>${d[2]} Yuri word${d[2]>1?'s':''} per page</small>`;b.onclick=()=>{di=i;sync()};$('diffs').appendChild(b)});
+const sync=()=>[...$('diffs').children].forEach((b,i)=>b.classList.toggle('sel',i==di));sync();
+
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);$('stage').style.transform=`translate(-50%,-50%) scale(${s})`}
+addEventListener('resize',fit);fit();
+
+function preload(){return Promise.all(MOODS.map(m=>new Promise(r=>{const i=new Image();i.referrerPolicy='no-referrer';i.onload=i.onerror=()=>r();i.src=m.url;setTimeout(r,15000)})))}
+let loaded=false;
+$('play').onclick=async()=>{const b=$('play');b.disabled=true;b.textContent='Loading...';if(!loaded){await preload();loaded=true}b.disabled=false;b.textContent='Play';start()};
+$('again').onclick=()=>{$('result').classList.remove('on');$('home').classList.add('on')};
+
+const bgm=$('bgm');bgm.volume=.5;let fade;
+$('mute').onclick=()=>{bgm.muted=!bgm.muted;$('mute').style.opacity=bgm.muted?.55:1;$('mute').innerHTML=bgm.muted?'&times;':'&#9835;'};
+function music(on){clearInterval(fade);if(on){bgm.volume=.5;bgm.currentTime=0;bgm.play().catch(()=>{})}else{fade=setInterval(()=>{if(bgm.volume>.05)bgm.volume=Math.max(0,bgm.volume-.05);else{bgm.pause();clearInterval(fade)}},100)}}
+function hop(){const c=$('chibi');c.classList.remove('hop');void c.offsetWidth;c.classList.add('hop')}
+function show(id){['home','game','result'].forEach(s=>$(s).classList.toggle('on',s==id))}
+function start(){cfg=DIFFS[di];used=new Set();picked=[];yScore=0;busy=false;$('poem').textContent='';page();show('game');music(true)}
+function page(){
+ $('count').textContent=picked.length+'/'+cfg[1];
+ const free=l=>l.filter(w=>!used.has(w)),nS=Math.round((10-cfg[2])*cfg[3]);
+ const ws=shuf(pick(free(YUR),cfg[2]).concat(pick(free(SAY),nS),pick(free(NAT),10-cfg[2]-nS)));
+ const c=$('words');c.innerHTML='';
+ ws.forEach((w,i)=>{const b=document.createElement('button');b.className='w';b.textContent=w;
+  b.style.left=COLX[i%2]+'px';b.style.top=(ROWY[i>>1]-36)+'px';b.onclick=()=>choose(w);c.appendChild(b)});
+}
+function choose(w){
+ if(busy)return;used.add(w);picked.push(w);if(YSET.has(w)){yScore++;if(di<2)hop()}
+ $('poem').textContent=picked.join(' ');
+ if(picked.length>=cfg[1]){busy=true;$('count').textContent=picked.length+'/'+cfg[1];setTimeout(finish,500)}else page();
+}
+function finish(){
+ const p=Math.round(100*yScore/cfg[1]),m=MOODS.find(m=>p<=m.max);
+ $('yuri').src=m.url;$('pct').textContent=p+'%';
+ $('msg').innerHTML=`${m.line}<small>${m.name} - Yuri liked ${yScore} of ${cfg[1]} words (${cfg[0]})</small>`;
+ show('result');music(false);
+}
+</script></body></html>
